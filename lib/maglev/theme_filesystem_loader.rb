@@ -40,12 +40,44 @@ module Maglev
       end
     end
 
+    SPACING_SETTINGS = [
+      { 'label' => 'Marge en haut',          'id' => 'spacing_top',    'type' => 'checkbox', 'default' => false },
+      { 'label' => 'Marge en bas',           'id' => 'spacing_bottom', 'type' => 'checkbox', 'default' => false },
+      {
+        'label' => "Taille de l'espacement",
+        'id' => 'spacing_size',
+        'type' => 'select',
+        'default' => 'md',
+        'select_options' => [
+          { 'label' => 'Très petit (xs)', 'value' => 'xs' },
+          { 'label' => 'Petit (sm)',      'value' => 'sm' },
+          { 'label' => 'Moyen (md)',      'value' => 'md' },
+          { 'label' => 'Grand (lg)',      'value' => 'lg' },
+          { 'label' => 'Très grand (xl)', 'value' => 'xl' }
+        ]
+      }
+    ].freeze
+
     def build_section(theme, section_id, attributes)
+      attributes['settings'] ||= []
+
+      inject_spacing_settings(attributes) if section_id != 'spacer'
+
       section = Maglev::Section.build(
         attributes.merge(id: section_id, theme: theme)
       )
       section.screenshot_timestamp = find_section_screenshot_timestamp(theme, section)
       section
+    end
+
+    def inject_spacing_settings(attributes)
+      return if setting_ids(attributes['settings']).include?('spacing_top')
+
+      attributes['settings'] += SPACING_SETTINGS.map(&:dup)
+    end
+
+    def setting_ids(settings)
+      settings.map { |s| (s['id'] || s[:id]).to_s }
     end
 
     def find_section_screenshot_timestamp(theme, section)
