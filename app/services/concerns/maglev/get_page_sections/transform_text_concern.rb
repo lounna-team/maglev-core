@@ -3,6 +3,7 @@
 # rubocop:disable Style/ClassAndModuleChildren
 module Maglev::GetPageSections::TransformTextConcern
   def transform_text_content_setting(content, setting)
+    content['value'] ||= '' if content.is_a?(Hash)
     return unless setting.options['html']
 
     content['value'] = replace_links_in_text(content['value'])
