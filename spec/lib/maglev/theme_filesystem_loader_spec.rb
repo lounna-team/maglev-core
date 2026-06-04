@@ -56,5 +56,74 @@ describe Maglev::ThemeFilesystemLoader do
       expect(spacing_top_settings.length).to eq(1)
       expect(spacing_top_settings.first.label).to eq('Custom top spacing')
     end
+
+    it 'automatically injects background_color at the beginning of settings' do
+      attributes = {
+        'name' => 'Hero',
+        'settings' => [
+          { 'id' => 'title', 'type' => 'text', 'label' => 'Title' }
+        ]
+      }
+      section = loader.send(:build_section, theme, 'hero', attributes)
+
+      setting_ids = section.settings.map(&:id)
+      expect(setting_ids.first).to eq('background_color')
+      expect(setting_ids).to include('background_color')
+    end
+
+    it 'does not inject background_color if already defined in YAML' do
+      attributes = {
+        'name' => 'Hero',
+        'settings' => [
+          { 'id' => 'background_color', 'type' => 'select', 'label' => 'Custom background' }
+        ]
+      }
+      section = loader.send(:build_section, theme, 'hero', attributes)
+
+      background_settings = section.settings.select { |s| s.id == 'background_color' }
+      expect(background_settings.length).to eq(1)
+      expect(background_settings.first.label).to eq('Custom background')
+    end
+
+    it 'injects button_type and button_variant next to button_text' do
+      attributes = {
+        'name' => 'Hero',
+        'settings' => [
+          { 'id' => 'button_text', 'type' => 'text', 'label' => 'Button text' },
+          { 'id' => 'other_setting', 'type' => 'text', 'label' => 'Other' }
+        ]
+      }
+      section = loader.send(:build_section, theme, 'hero', attributes)
+
+      setting_ids = section.settings.map(&:id)
+      expect(setting_ids).to include('button_type', 'button_variant')
+
+      idx_text = setting_ids.index('button_text')
+      idx_type = setting_ids.index('button_type')
+      idx_variant = setting_ids.index('button_variant')
+
+      expect(idx_type).to eq(idx_text + 1)
+      expect(idx_variant).to eq(idx_type + 1)
+    end
+
+    it 'injects button_type and button_variant next to button_link if button_text is not present' do
+      attributes = {
+        'name' => 'Hero',
+        'settings' => [
+          { 'id' => 'button_link', 'type' => 'link', 'label' => 'Button link' }
+        ]
+      }
+      section = loader.send(:build_section, theme, 'hero', attributes)
+
+      setting_ids = section.settings.map(&:id)
+      expect(setting_ids).to include('button_type', 'button_variant')
+
+      idx_link = setting_ids.index('button_link')
+      idx_type = setting_ids.index('button_type')
+      idx_variant = setting_ids.index('button_variant')
+
+      expect(idx_type).to eq(idx_link + 1)
+      expect(idx_variant).to eq(idx_type + 1)
+    end
   end
 end
